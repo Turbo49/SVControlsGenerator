@@ -11,31 +11,51 @@ end
 
 --Initialize vars--
 local controls = {
-	useStartTransition = {
-		value = SV:create("WidgetValue"),
-		defaultValue = true
-	},
-	startTransitionWidth = {
-		value = SV:create("WidgetValue"),
-		defaultValue = 10
-	},
-	startTransitionHeight = {
-		value = SV:create("WidgetValue"),
-		defaultValue = 0
-	},
-	useEndTransition = {
-		value = SV:create("WidgetValue"),
-		defaultValue = true
-	},
-	endTransitionWidth = {
-		value = SV:create("WidgetValue"),
-		defaultValue = 10
-	},
-	endTransitionHeight = {
-		value = SV:create("WidgetValue"),
-		defaultValue = 0
-	},
+	---start
+	useStartTransition = SV:create("WidgetValue"),
+	startTransitionWidth = SV:create("WidgetValue"),
+	startTransitionHeight = SV:create("WidgetValue"),
+	---end
+	useEndTransition = SV:create("WidgetValue"),
+	endTransitionWidth = SV:create("WidgetValue"),
+	endTransitionHeight = SV:create("WidgetValue"),
+	---vibrato
+	useVibrato = SV:create("WidgetValue"),
+	vibratoStartFromStart = SV:create("WidgetValue"),
+	vibratoStartFromEnd = SV:create("WidgetValue"),
+	vibratoFrequency = SV:create("WidgetValue"),
+	vibratoAmplitude = SV:create("WidgetValue"),
+	vibratoFadeIn = SV:create("WidgetValue"),
+	vibratoFadeOut = SV:create("WidgetValue"),
+	---buttons
+	applyControls = SV:create("WidgetValue"),
+	resetControls = SV:create("WidgetValue"),
 }
+
+controls.useStartTransition:setValue(true)
+controls.startTransitionWidth:setValue(10)
+controls.startTransitionHeight:setValue(0)
+
+controls.useEndTransition:setValue(true)
+controls.endTransitionWidth:setValue(10)
+controls.endTransitionHeight:setValue(0)
+
+controls.useVibrato:setValue(true)
+controls.vibratoStartFromStart:setValue(10)
+controls.vibratoStartFromEnd:setValue(10)
+controls.vibratoFrequency:setValue(5)
+controls.vibratoAmplitude:setValue(10)
+controls.vibratoFadeIn:setValue(2)
+controls.vibratoFadeOut:setValue(2)
+
+--[[
+local message=""
+for key,value in pairs(controls.useStartTransition.value) do
+	message = message..tostring(key).."\n"
+end
+local form = {message=message}
+SV:showCustomDialog(form)
+]]
 
 function getSidePanelSectionState()
 	return {
@@ -59,6 +79,8 @@ function getSidePanelSectionState()
 						type = "Slider",
 						text = "Transition Width",
 						format = "%.0f beats",
+						minValue = 0,
+						maxValue = 20,
 						value = controls.startTransitionWidth
 					}
 				}
@@ -70,6 +92,8 @@ function getSidePanelSectionState()
 						type = "Slider",
 						text = "Transition Height",
 						format = "%.0f cents",
+						minValue = -100,
+						maxValue = 100,
 						value = controls.startTransitionHeight
 					}
 				}
@@ -91,6 +115,8 @@ function getSidePanelSectionState()
 						type = "Slider",
 						text = "Transition Width",
 						format = "%.0f beats",
+						minValue = 0,
+						maxValue = 20,
 						value = controls.endTransitionWidth
 					}
 				}
@@ -102,6 +128,8 @@ function getSidePanelSectionState()
 						type = "Slider",
 						text = "Transition Height",
 						format = "%.0f cents",
+						minValue = -100,
+						maxValue = 100,
 						value = controls.endTransitionHeight
 					}
 				}
@@ -124,7 +152,9 @@ function getSidePanelSectionState()
 						type = "Slider",
 						text = "Minimum Time from Start",
 						format = "%.0f beats",
-						value = controls.vibratoStartStart
+						minValue = 0,
+						maxValue = 50,
+						value = controls.vibratoStartFromStart
 					}
 				}
 			},
@@ -135,7 +165,9 @@ function getSidePanelSectionState()
 						type = "Slider",
 						text = "Maximum Time from End",
 						format = "%.0f beats",
-						value = controls.vibratoStartEnd
+						minValue = 0,
+						maxValue = 50,
+						value = controls.vibratoStartFromEnd
 					}
 				}
 			},
@@ -146,6 +178,8 @@ function getSidePanelSectionState()
 						type = "Slider",
 						text = "Frequency",
 						format = "%.0f Hz",
+						minValue = 1,
+						maxValue = 100,
 						value = controls.vibratoFrequency
 					}
 				}
@@ -157,6 +191,8 @@ function getSidePanelSectionState()
 						type = "Slider",
 						text = "Amplitude",
 						format = "%.0f cents",
+						minValue = 0,
+						maxValue = 100,
 						value = controls.vibratoAmplitude
 					}
 				}
@@ -169,6 +205,8 @@ function getSidePanelSectionState()
 						text = "Fade In",
 						format = "%.0f beats",
 						width = 0.5,
+						minValue = 0,
+						maxValue = 20,
 						value = controls.vibratoFadeIn
 					},
 					{
@@ -176,6 +214,8 @@ function getSidePanelSectionState()
 						text = "Fade Out",
 						format = "%.0f beats",
 						width = 0.5,
+						minValue = 0,
+						maxValue = 20,
 						value = controls.vibratoFadeOut
 					}
 				}
