@@ -1,5 +1,12 @@
 {
     "Lua.diagnostics.globals": [
-        "SV"
+        "SV",
+        "getClientInfo",
+        "getSidePanelSectionState",
+        "createNoteParameters",
+        "clearNoteParameters"
+    ],
+    "Lua.diagnostics.disable": [
+        "lowercase-global"
     ]
 }
