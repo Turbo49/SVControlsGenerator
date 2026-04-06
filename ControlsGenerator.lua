@@ -54,15 +54,15 @@ controls.vibratoFadeOut:setValue(1)
 controls.useFlattening:setValue(true)
 
 -- functions that do the thing
-function clearNoteParameters(group)
+function clearNoteParameters(group,notes)
 	local numControls = group:getNumPitchControls()
-
+	
 	for controlIndex = 1,numControls do
 		group:removePitchControl(1)
 	end
 end
 
-function createNoteParameters(group)
+function createNoteParameters(group,notes)
 	--note loop
 	local numNotes = group:getNumNotes()
 
@@ -82,7 +82,7 @@ function createNoteParameters(group)
 		local startPosition = noteOnset + (controls.startTransitionWidth:getValue() * SV.QUARTER / 4)
 		local endPosition = noteEnd - (controls.endTransitionWidth:getValue() * SV.QUARTER / 4)
 		local vibratoStartPosition = math.max(noteOnset + (controls.vibratoStartFromStart:getValue() * SV.QUARTER / 4), noteEnd - (controls.vibratoStartFromEnd:getValue() * SV.QUARTER / 4))
-		local vibratoDistance = (vibratoStartPosition - startPosition)
+		local vibratoDistance = math.min((vibratoStartPosition - startPosition),(endPosition - startPosition))
 
 		--start transition
 		if controls.useStartTransition:getValue() then
@@ -123,28 +123,33 @@ function createNoteParameters(group)
 		end
 
 		--flattening
-		if controls.useFlattening:getValue() and vibratoDistance > (controls.startTransitionWidth:getValue() * SV.QUARTER / 4) then
+		if controls.useFlattening:getValue() and vibratoDistance > (controls.startTransitionWidth:getValue() * SV.QUARTER) then
 			local controlCurve = SV:create("PitchControlCurve")
 			controlCurve:setPitch(notePitch)
 			controlCurve:setPosition(noteOnset)
-			controlCurve:setPoints({{(controls.startTransitionWidth:getValue() * SV.QUARTER / 2),0},{vibratoStartPosition - noteOnset - (controls.startTransitionWidth:getValue() * SV.QUARTER / 4),0}})
+			controlCurve:setPoints({{(controls.startTransitionWidth:getValue() * SV.QUARTER / 2),0},{vibratoDistance,0}})
 			group:addPitchControl(controlCurve)
 		end
 		
 	end
 end
 
--- main loop
-function main(group)
-	clearNoteParameters(group)
-	createNoteParameters(group)
-end
+--update selection on change
+selectedGroup = SV:getMainEditor():getCurrentGroup():getTarget()
+selectedNotes = SV:getMainEditor():getSelection():getSelectedNotes()
 
-local selectedGroup = SV:getMainEditor():getCurrentGroup():getTarget()
-local selectedNotes = SV:getMainEditor():getSelection():getSelectedNotes()
+SV:getMainEditor():getSelection():registerSelectionCallback(function()
+	selectedGroup = SV:getMainEditor():getCurrentGroup():getTarget()
+	selectedNotes = SV:getMainEditor():getSelection():getSelectedNotes()
+end)
+
 --on button press
-controls.applyControls:setValueChangeCallback(function() main(selectedGroup) end)
-controls.resetControls:setValueChangeCallback(function() clearNoteParameters(selectedGroup) end)
+controls.applyControls:setValueChangeCallback(function() 
+	clearNoteParameters(selectedGroup,selectedNotes)
+	createNoteParameters(selectedGroup,selectedNotes) end)
+
+controls.resetControls:setValueChangeCallback(function()
+	clearNoteParameters(selectedGroup,selectedNotes) end)
 
 
 -- debug code
@@ -350,7 +355,7 @@ function getSidePanelSectionState()
 				columns = {
 					{
 						type = "Button",
-						text = "Apply",
+						text = "Apply to Selected",
 						value = controls.applyControls
 					}
 				}
@@ -360,7 +365,7 @@ function getSidePanelSectionState()
 				columns = {
 					{
 						type = "Button",
-						text = "Reset",
+						text = "Reset Selected",
 						value = controls.resetControls
 					}
 				}
