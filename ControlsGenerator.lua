@@ -21,8 +21,8 @@ controls = {
 	endTransitionHeight = SV:create("WidgetValue"),
 	--vibrato
 	useVibrato = SV:create("WidgetValue"),
-	vibratoStartFromStart = SV:create("WidgetValue"),
-	vibratoStartFromEnd = SV:create("WidgetValue"),
+	vibratoMinNoteLength = SV:create("WidgetValue"),
+	vibratoCoverage = SV:create("WidgetValue"),
 	vibratoFrequency = SV:create("WidgetValue"),
 	vibratoAmplitude = SV:create("WidgetValue"),
 	vibratoFadeIn = SV:create("WidgetValue"),
@@ -35,19 +35,19 @@ controls = {
 }
 
 -- set defaults
-controls.useStartTransition:setValue(true)
-controls.startTransitionWidth:setValue(1)
+controls.useStartTransition:setValue(false)
+controls.startTransitionWidth:setValue(0.2)
 controls.startTransitionHeight:setValue(0)
 
-controls.useEndTransition:setValue(true)
-controls.endTransitionWidth:setValue(1)
+controls.useEndTransition:setValue(false)
+controls.endTransitionWidth:setValue(0.2)
 controls.endTransitionHeight:setValue(0)
 
 controls.useVibrato:setValue(true)
-controls.vibratoStartFromStart:setValue(4)
-controls.vibratoStartFromEnd:setValue(8)
-controls.vibratoFrequency:setValue(8)
-controls.vibratoAmplitude:setValue(1)
+controls.vibratoMinNoteLength:setValue(6)
+controls.vibratoCoverage:setValue(80)
+controls.vibratoFrequency:setValue(6)
+controls.vibratoAmplitude:setValue(0.8)
 controls.vibratoFadeIn:setValue(1)
 controls.vibratoFadeOut:setValue(1)
 
@@ -75,14 +75,14 @@ function createNoteParameters(group,notes)
 		local noteEnd = noteOnset + noteDuration
 		local notePitch = note:getPitch()
 
-		--set expression to rigid and vibrato to 0
-		note:setAttributes({dF0VbrMod = 0, expValueX = -1, expValueY = -1})
+		--set expression to rigid and vibrato to 1
+		note:setAttributes({dF0VbrMod = 1, expValueX = -1, expValueY = -1})
 
 		--add controls
 		local startPosition = noteOnset + (controls.startTransitionWidth:getValue() * SV.QUARTER / 4)
 		local endPosition = noteEnd - (controls.endTransitionWidth:getValue() * SV.QUARTER / 4)
-		local vibratoStartPosition = math.max(noteOnset + (controls.vibratoStartFromStart:getValue() * SV.QUARTER / 4), noteEnd - (controls.vibratoStartFromEnd:getValue() * SV.QUARTER / 4))
-		local vibratoDistance = math.min((vibratoStartPosition - startPosition),(endPosition - startPosition))
+		-- initialize vibrato position at the end in case it goes unused
+		local vibratoStartPosition = endPosition - (controls.startTransitionWidth:getValue() * SV.QUARTER / 4) + SV:getProject():getTimeAxis():getBlickFromSeconds(0.25/controls.vibratoFrequency:getValue())
 
 		--start transition
 		if controls.useStartTransition:getValue() then
@@ -101,8 +101,9 @@ function createNoteParameters(group,notes)
 		end
 
 		--vibrato
-		if controls.useVibrato:getValue() then
+		if (controls.useVibrato:getValue()) and (noteDuration > controls.vibratoMinNoteLength:getValue() * SV.QUARTER / 4) then
 			--add controls in loop
+			vibratoStartPosition = noteOnset + noteDuration * (100 - controls.vibratoCoverage:getValue()) / 100
 			local currentVibratoPosition = vibratoStartPosition
 			local isTop = true
 
@@ -123,11 +124,11 @@ function createNoteParameters(group,notes)
 		end
 
 		--flattening
-		if controls.useFlattening:getValue() and vibratoDistance > (controls.startTransitionWidth:getValue() * SV.QUARTER) then
+		if (controls.useFlattening:getValue()) and (vibratoStartPosition - noteOnset > (controls.startTransitionWidth:getValue() * SV.QUARTER / 2) + (SV:getProject():getTimeAxis():getBlickFromSeconds(0.25/controls.vibratoFrequency:getValue()))) then
 			local controlCurve = SV:create("PitchControlCurve")
 			controlCurve:setPitch(notePitch)
 			controlCurve:setPosition(noteOnset)
-			controlCurve:setPoints({{(controls.startTransitionWidth:getValue() * SV.QUARTER / 2),0},{vibratoDistance,0}})
+			controlCurve:setPoints({{(controls.startTransitionWidth:getValue() * SV.QUARTER / 2),0},{vibratoStartPosition - noteOnset - SV:getProject():getTimeAxis():getBlickFromSeconds(0.25/controls.vibratoFrequency:getValue()),0}})
 			group:addPitchControl(controlCurve)
 		end
 		
@@ -271,12 +272,12 @@ function getSidePanelSectionState()
 				columns = {
 					{
 						type = "Slider",
-						text = "Minimum Time from Start",
+						text = "Minimum Note Length",
 						format = "%.1f beats",
 						minValue = 0,
 						maxValue = 12,
 						interval = 0.1,
-						value = controls.vibratoStartFromStart
+						value = controls.vibratoMinNoteLength
 					}
 				}
 			},
@@ -285,12 +286,12 @@ function getSidePanelSectionState()
 				columns = {
 					{
 						type = "Slider",
-						text = "Maximum Time from End",
-						format = "%.1f beats",
+						text = "Note Coverage",
+						format = "%3.0f %%",
 						minValue = 0,
-						maxValue = 24,
-						interval = 0.1,
-						value = controls.vibratoStartFromEnd
+						maxValue = 100,
+						interval = 1,
+						value = controls.vibratoCoverage
 					}
 				}
 			},
