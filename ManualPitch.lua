@@ -1,6 +1,6 @@
 function getClientInfo()
 	return {
-		name = "Manual Pitch",
+		name = "1 - Manual Pitch",
 		category = "Utilities",
 		author = "Turbo49",
 		versionNumber = 1,

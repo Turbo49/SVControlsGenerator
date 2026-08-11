@@ -1,6 +1,6 @@
 function getClientInfo()
 	return {
-		name = "Growl",
+		name = "2 - Manual Growl",
 		category = "Utilities",
 		author = "Turbo49",
 		versionNumber = 1,
@@ -19,7 +19,7 @@ parameters = {
 }
 
 -- set defaults
-parameters.growlType:setValue(2)
+parameters.growlType:setValue(0)
 parameters.growlCoverage:setValue(50)
 parameters.growlAmplitudeMod:setValue(0)
 
@@ -54,27 +54,20 @@ function createAutomation(group,notes)
 		startPosition = note:getOnset()
 		endPosition = note:getEnd()
 		noteLength = endPosition - startPosition
-		if parameters.growlType:getValue() == 0 then
-			local pointBoundaries = 0
-			local pointAmplitude = 0
-			local pointSpacing = .01 * SV.QUARTER
-			local pointAmount = (noteLength * parameters.growlCoverage:getValue() / 100) / pointSpacing
-			for i = 1,pointAmount do
-				pointAmplitude = 100 + parameters.growlAmplitudeMod:getValue()
-				pointBoundaries = math.floor(pointAmplitude - (i / pointAmount) * pointAmplitude)
-				pitch:add(startPosition + i * pointSpacing, math.random(-pointBoundaries,0))
-			end
-		elseif parameters.growlType:getValue() == 1 then
-			local pointBoundaries = 0
-			local pointAmplitude = 0
-			local pointSpacing = .01 * SV.QUARTER
-			local pointAmount = noteLength * parameters.growlCoverage:getValue() / 100 / pointSpacing
-			for i = 1,pointAmount do
-				pointAmplitude = 100 + parameters.growlAmplitudeMod:getValue()
-				pointBoundaries = math.floor(pointAmplitude - (i / pointAmount) * pointAmplitude)
-				pitch:add(endPosition - i * pointSpacing, math.random(-pointBoundaries,0))
-			end
-		elseif parameters.growlType:getValue() == 2 then
+
+		if parameters.growlType:getValue() == 4 then
+			local pointAmplitude = 1000 + parameters.growlAmplitudeMod:getValue()
+			pitch:add(startPosition + 1, -pointAmplitude)
+			pitch:add(startPosition + noteLength * parameters.growlCoverage:getValue() / 320, -pointAmplitude * .8)
+			pitch:add(startPosition + noteLength * parameters.growlCoverage:getValue() / 300, 0)
+
+		elseif parameters.growlType:getValue() == 5 then
+			local pointAmplitude = 1000 + parameters.growlAmplitudeMod:getValue()
+			pitch:add(endPosition - 1, -pointAmplitude)
+			pitch:add(endPosition - noteLength * parameters.growlCoverage:getValue() / 320, -pointAmplitude * .8)
+			pitch:add(endPosition - noteLength * parameters.growlCoverage:getValue() / 300, 0)
+
+		elseif parameters.growlType:getValue() == 0 then
 			local pointBoundaries = math.floor(50 + (parameters.growlAmplitudeMod:getValue() / 2))
 			local pointSpacing = .02 * SV.QUARTER
 			local pointAmount = math.floor(noteLength * parameters.growlCoverage:getValue() / 100 / pointSpacing)
@@ -90,7 +83,8 @@ function createAutomation(group,notes)
 			end
 			-- add a final point at 0 to stop the pitch from being modified outside of bounds
 			pitch:add(startPosition + noteLength * parameters.growlCoverage:getValue() / 100, 0)
-		elseif parameters.growlType:getValue() == 3 then
+
+		elseif parameters.growlType:getValue() == 1 then
 			local pointBoundaries = math.floor(50 + (parameters.growlAmplitudeMod:getValue() / 2))
 			local pointSpacing = .02 * SV.QUARTER
 			local pointAmount = math.floor(noteLength * parameters.growlCoverage:getValue() / 100 / pointSpacing)
@@ -106,7 +100,30 @@ function createAutomation(group,notes)
 			end
 			-- add a final point at 0 to stop the pitch from being modified outside of bounds
 			pitch:add(endPosition - noteLength * parameters.growlCoverage:getValue() / 100, 0)
-		elseif parameters.growlType:getValue() == 4 then
+
+		elseif parameters.growlType:getValue() == 2 then
+			local pointBoundaries = 0
+			local pointAmplitude = 0
+			local pointSpacing = .01 * SV.QUARTER
+			local pointAmount = noteLength * parameters.growlCoverage:getValue() / 100 / pointSpacing
+			for i = 1,pointAmount do
+				pointAmplitude = 75 + parameters.growlAmplitudeMod:getValue() / 2
+				pointBoundaries = math.floor(pointAmplitude - (i / pointAmount) * pointAmplitude)
+				pitch:add(startPosition + i * pointSpacing, math.random(-pointBoundaries,pointBoundaries))
+			end
+
+		elseif parameters.growlType:getValue() == 3 then
+			local pointBoundaries = 0
+			local pointAmplitude = 0
+			local pointSpacing = .01 * SV.QUARTER
+			local pointAmount = noteLength * parameters.growlCoverage:getValue() / 100 / pointSpacing
+			for i = 1,pointAmount do
+				pointAmplitude = 75 + parameters.growlAmplitudeMod:getValue() / 2
+				pointBoundaries = math.floor(pointAmplitude - (i / pointAmount) * pointAmplitude)
+				pitch:add(endPosition - i * pointSpacing, math.random(-pointBoundaries,pointBoundaries))
+			end
+
+		elseif parameters.growlType:getValue() == 6 then
 			-- add points at note boundaries at current values
 			breath:add(startPosition, breath:get(startPosition))
 			breath:add(endPosition, breath:get(endPosition))
@@ -117,6 +134,7 @@ function createAutomation(group,notes)
 			breath:add(endPosition - 1, 1)
 			voice:add(startPosition + 1, 0)
 			voice:add(endPosition - 1, 0)
+
 		end
 	end
 end
@@ -155,7 +173,7 @@ end)
 
 function getSidePanelSectionState()
 	return {
-		title = "Growl",
+		title = "Manual Growl",
 		rows = {
 			--options
 			{
@@ -163,7 +181,7 @@ function getSidePanelSectionState()
 				columns = {
 					{
 						type = "ComboBox",
-						choices = {"Vocal Fry (Start)", "Vocal Fry (End)", "Growl (Start)", "Growl (End)", "Guttural"},
+						choices = {"Growl (Start)", "Growl (End)", "Fading Growl (Start)", "Fading Growl (End)", "Vocal Fry (Start)", "Vocal Fry (End)", "Guttural"},
 						value = parameters.growlType
 					}
 				}
@@ -187,7 +205,7 @@ function getSidePanelSectionState()
 				columns = {
 					{
 						type = "Slider",
-						text = "Note Coverage",
+						text = "Coverage",
 						format = "%3.0f %%",
 						minValue = 0,
 						maxValue = 100,
