@@ -1,10 +1,7 @@
-# SVControlsGenerator
+# Manual Pitch
 
 This script aims to provide functionality similar to SV1's Manual Mode.
 It allows to obtain a more classic vocaloid sound (either from fast pitch changes or even flat pitch), place control points automatically that can be adjusted afterwards, and control the vibrato manually.
-
-> **Warning !**
-In it's current state, you can only apply it to entire groups.
 
 **Features :**
 
@@ -28,7 +25,13 @@ https://github.com/user-attachments/assets/a54f11b0-46fe-44de-8ed4-c96daf3478f3
 
 https://github.com/user-attachments/assets/96f19a98-b3f0-444c-922e-a56d9482671f
 
+# Manual Growl
 
-**Planned features :**
-- Vibrato fading
-- Growl
+This script provides 4 different types of effects to add grit to vocals
+
+**Features :**
+
+- Basic growl with adjustable amplitude and note coverage
+- Fading variant that can be put at the start or end of a note
+- Vocal fry effect at the start or end of a note
+- Guttural unvoiced effect
